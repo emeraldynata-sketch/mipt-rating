@@ -224,6 +224,19 @@ p {
   font-size: 13px;
 }
 
+.row-count {
+  display: inline-flex;
+  align-items: center;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
 .table-wrap {
   overflow: auto;
   max-height: calc(100vh - 250px);
@@ -281,6 +294,12 @@ tbody tr:hover {
 .direction-table th:nth-child(2),
 .direction-table td:nth-child(2) {
   min-width: 54px;
+}
+
+.row-index {
+  color: var(--muted);
+  font-weight: 700;
+  text-align: right;
 }
 
 .direction-table th:nth-child(3),

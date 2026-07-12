@@ -191,11 +191,16 @@
     `;
   }
 
+  function priorityOptions(rows) {
+    return [...new Set(rows.map((row) => row["Приоритет"]).filter((value) => value !== undefined && value !== ""))]
+      .sort((a, b) => num(a) - num(b));
+  }
+
   function renderDirection(direction, search) {
     pageTitle.textContent = direction.shortName;
     pageSubtitle.textContent = `Приоритет ${fmt(direction.priority)} · мест ${fmt(direction.places)} · файл ${direction.fileName}`;
-    const rows = filterDirectionRows(direction.rows, search, "all");
     const anya = direction.rows.find((row) => String(row["Уникальный код"]) === applicantId);
+    const priorities = priorityOptions(direction.rows);
 
     directionView.innerHTML = `
       <div class="cards">
@@ -216,12 +221,17 @@
               <option value="consent">есть согласие</option>
               <option value="bvi">БВИ</option>
             </select>
+            <select id="priorityFilter">
+              <option value="all">все приоритеты</option>
+              ${priorities.map((priority) => `<option value="${escapeHtml(priority)}">приоритет ${escapeHtml(priority)}</option>`).join("")}
+            </select>
+            <span id="rowCount" class="row-count"></span>
           </div>
         </div>
         <div class="table-wrap">
           <table class="direction-table">
             <thead>
-              <tr>${direction.columns.map((col) => `<th>${headerLabel(col)}</th>`).join("")}</tr>
+              <tr><th>#</th>${direction.columns.map((col) => `<th>${headerLabel(col)}</th>`).join("")}</tr>
             </thead>
             <tbody id="directionRows"></tbody>
           </table>
@@ -230,27 +240,36 @@
     `;
 
     const select = document.getElementById("rowFilter");
-    select.addEventListener("change", () => paintDirectionRows(direction, search, select.value));
-    paintDirectionRows(direction, search, "all", rows);
+    const prioritySelect = document.getElementById("priorityFilter");
+    const repaint = () => paintDirectionRows(direction, search, select.value, prioritySelect.value);
+    select.addEventListener("change", repaint);
+    prioritySelect.addEventListener("change", repaint);
+    repaint();
   }
 
-  function filterDirectionRows(rows, search, filter) {
+  function filterDirectionRows(rows, search, filter, priorityFilter = "all") {
     return rows.filter((row) => {
       if (filter === "main" && !yes(row["МФТИ_full_расчет_основной_приоритет"])) return false;
       if (filter === "mainNoOther" && !yes(row["МФТИ_full_основной_без_согласий_в_других_вузах"])) return false;
       if (filter === "highest" && !yes(row["МФТИ_full_расчет_высший_проходной_приоритет"])) return false;
       if (filter === "consent" && !yes(row["Согласие_есть_в_наших_выгрузках"]) && !yes(row["Согласие МФТИ сайт"])) return false;
       if (filter === "bvi" && !yes(row["БВИ в этом конкурсе"])) return false;
+      if (priorityFilter !== "all" && String(row["Приоритет"]) !== String(priorityFilter)) return false;
       if (!search) return true;
       return Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(search));
     });
   }
 
-  function paintDirectionRows(direction, search, filter, preparedRows) {
-    const rows = preparedRows || filterDirectionRows(direction.rows, search, filter);
+  function paintDirectionRows(direction, search, filter, priorityFilter) {
+    const rows = filterDirectionRows(direction.rows, search, filter, priorityFilter);
     const body = document.getElementById("directionRows");
-    body.innerHTML = rows.map((row) => `
+    const counter = document.getElementById("rowCount");
+    if (counter) {
+      counter.textContent = `Строк: ${rows.length} из ${direction.rows.length}`;
+    }
+    body.innerHTML = rows.map((row, index) => `
       <tr class="${String(row["Уникальный код"]) === applicantId ? "anya-row" : ""}">
+        <td class="row-index">${index + 1}</td>
         ${direction.columns.map((col) => {
           const value = row[col];
           if (["МФТИ_full_расчет_основной_приоритет", "МФТИ_full_основной_без_согласий_в_других_вузах", "МФТИ_full_расчет_высший_проходной_приоритет", "Согласие_МФТИ_госуслуги", "Согласие_МИФИ_госуслуги", "Согласие_Баумана_госуслуги", "БВИ в этом конкурсе"].includes(col)) {
@@ -259,7 +278,7 @@
           return `<td>${escapeHtml(value)}</td>`;
         }).join("")}
       </tr>
-    `).join("") || `<tr><td colspan="${direction.columns.length}" class="empty">Ничего не найдено</td></tr>`;
+    `).join("") || `<tr><td colspan="${direction.columns.length + 1}" class="empty">Ничего не найдено</td></tr>`;
   }
 
   globalSearch.addEventListener("input", render);

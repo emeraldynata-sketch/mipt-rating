@@ -88,6 +88,11 @@
     `).join("");
   }
 
+  function priorityOptions(rows) {
+    return [...new Set(rows.map((row) => row["Приоритет конкурса"]).filter((value) => value !== undefined && value !== ""))]
+      .sort((a, b) => num(a) - num(b));
+  }
+
   function setActiveNav() {
     document.querySelectorAll(".direction-link").forEach((el) => {
       el.classList.toggle("active", route.view === "direction" && el.dataset.key === route.key);
@@ -174,6 +179,7 @@
     pageTitle.textContent = direction.shortName;
     pageSubtitle.textContent = `Приоритет ${fmt(direction.priority)} · мест ${fmt(direction.places)} · файл ${direction.fileName}`;
     const anya = direction.rows.find((row) => String(row["ID участника"]) === applicantId);
+    const priorities = priorityOptions(direction.rows);
 
     directionView.innerHTML = `
       <div class="cards">
@@ -192,13 +198,19 @@
               <option value="mainNoOther">основной без согласий в других</option>
               <option value="highest">высший проходной</option>
               <option value="consent">есть согласие</option>
+              <option value="bvi">БВИ</option>
             </select>
+            <select id="priorityFilter">
+              <option value="all">все приоритеты</option>
+              ${priorities.map((priority) => `<option value="${escapeHtml(priority)}">приоритет ${escapeHtml(priority)}</option>`).join("")}
+            </select>
+            <span id="rowCount" class="row-count"></span>
           </div>
         </div>
         <div class="table-wrap">
           <table class="direction-table">
             <thead>
-              <tr>${direction.columns.map((col) => `<th>${headerLabel(col)}</th>`).join("")}</tr>
+              <tr><th>#</th>${direction.columns.map((col) => `<th>${headerLabel(col)}</th>`).join("")}</tr>
             </thead>
             <tbody id="directionRows"></tbody>
           </table>
@@ -207,25 +219,35 @@
     `;
 
     const select = document.getElementById("rowFilter");
-    select.addEventListener("change", () => paintDirectionRows(direction, search, select.value));
-    paintDirectionRows(direction, search, "all");
+    const prioritySelect = document.getElementById("priorityFilter");
+    const repaint = () => paintDirectionRows(direction, search, select.value, prioritySelect.value);
+    select.addEventListener("change", repaint);
+    prioritySelect.addEventListener("change", repaint);
+    repaint();
   }
 
-  function filterRows(rows, search, filter) {
+  function filterRows(rows, search, filter, priorityFilter = "all") {
     return rows.filter((row) => {
       if (filter === "main" && !yes(row["Расчет_основной_приоритет"])) return false;
       if (filter === "mainNoOther" && (!yes(row["Расчет_основной_приоритет"]) || yes(row["Расчет_согласие_в_другом_вузе"]))) return false;
       if (filter === "highest" && !yes(row["Расчет_высший_проходной_приоритет"])) return false;
       if (filter === "consent" && !yes(row["Расчет_согласие_есть_в_любом_из_3_вузов"]) && !yes(row["Подано согласие"])) return false;
+      if (filter === "bvi" && String(row["Баллы за ВИ"]).trim() !== "Без вступительных испытаний") return false;
+      if (priorityFilter !== "all" && String(row["Приоритет конкурса"]) !== String(priorityFilter)) return false;
       if (!search) return true;
       return Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(search));
     });
   }
 
-  function paintDirectionRows(direction, search, filter) {
-    const rows = filterRows(direction.rows, search, filter);
-    document.getElementById("directionRows").innerHTML = rows.map((row) => `
+  function paintDirectionRows(direction, search, filter, priorityFilter) {
+    const rows = filterRows(direction.rows, search, filter, priorityFilter);
+    const counter = document.getElementById("rowCount");
+    if (counter) {
+      counter.textContent = `Строк: ${rows.length} из ${direction.rows.length}`;
+    }
+    document.getElementById("directionRows").innerHTML = rows.map((row, index) => `
       <tr class="${String(row["ID участника"]) === applicantId ? "anya-row" : ""}">
+        <td class="row-index">${index + 1}</td>
         ${direction.columns.map((col) => {
           const value = row[col];
           if (["Подано согласие", "Расчет_основной_приоритет", "Расчет_высший_проходной_приоритет", "Расчет_согласие_есть_в_любом_из_3_вузов", "Расчет_согласие_в_этом_вузе", "Расчет_согласие_в_другом_вузе", "Согласие_МФТИ_госуслуги", "Согласие_МИФИ_госуслуги", "Согласие_Баумана_госуслуги"].includes(col)) {
@@ -234,7 +256,7 @@
           return `<td>${escapeHtml(value)}</td>`;
         }).join("")}
       </tr>
-    `).join("") || `<tr><td colspan="${direction.columns.length}" class="empty">Ничего не найдено</td></tr>`;
+    `).join("") || `<tr><td colspan="${direction.columns.length + 1}" class="empty">Ничего не найдено</td></tr>`;
   }
 
   globalSearch.addEventListener("input", render);
