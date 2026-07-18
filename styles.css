@@ -137,7 +137,8 @@ p {
 .search-box input,
 .toolbar input,
 .toolbar select,
-.toolbar button {
+.toolbar button,
+.table-actions button {
   height: 38px;
   border: 1px solid var(--line);
   background: #fff;
@@ -147,12 +148,14 @@ p {
   font: inherit;
 }
 
-.toolbar button {
+.toolbar button,
+.table-actions button {
   cursor: pointer;
   font-weight: 700;
 }
 
-.toolbar button:hover {
+.toolbar button:hover,
+.table-actions button:hover {
   border-color: #9aa7b6;
   background: #f8fafc;
 }
@@ -253,6 +256,18 @@ p {
   max-height: calc(100vh - 250px);
 }
 
+.table-actions {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  background: #f8fafc;
+}
+
 table {
   width: 100%;
   border-collapse: separate;
@@ -292,6 +307,7 @@ tbody tr:hover {
 }
 
 .direction-table th {
+  top: 55px;
   min-width: 82px;
   max-width: 136px;
   white-space: normal;
