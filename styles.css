@@ -166,34 +166,37 @@ p {
 
 .cards {
   display: grid;
-  grid-template-columns: repeat(4, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 16px;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
 .metric {
   background: var(--panel);
   border: 1px solid var(--line);
   border-radius: 8px;
-  padding: 14px;
+  padding: 10px 11px;
   box-shadow: var(--shadow);
+  min-width: 0;
 }
 
 .metric-label {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 .metric-value {
-  margin-top: 5px;
-  font-size: 24px;
+  margin-top: 4px;
+  font-size: 21px;
   font-weight: 760;
 }
 
 .metric-note {
-  margin-top: 4px;
+  margin-top: 3px;
   color: var(--muted);
-  font-size: 12px;
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 .panel {
