@@ -1,6 +1,7 @@
 (function () {
   const data = window.MIPT_DATA;
   const applicantId = data.applicantId;
+  normalizeRows();
   let route = parseRoute();
 
   const summaryView = document.getElementById("summaryView");
@@ -11,6 +12,19 @@
   const globalSearch = document.getElementById("globalSearch");
 
   document.getElementById("buildStamp").textContent = data.generatedAt;
+
+  function normalizeRows() {
+    data.directions.forEach((direction) => {
+      if (!direction.rows.length || !Array.isArray(direction.rows[0])) return;
+      direction.rows = direction.rows.map((values) => {
+        const row = {};
+        direction.columns.forEach((column, index) => {
+          row[column] = values[index] ?? "";
+        });
+        return row;
+      });
+    });
+  }
 
   function parseRoute() {
     const hash = window.location.hash || "#/summary";
