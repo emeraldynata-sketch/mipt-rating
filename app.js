@@ -240,6 +240,7 @@
               ${priorities.map((priority) => `<option value="${escapeHtml(priority)}">приоритет ${escapeHtml(priority)}</option>`).join("")}
             </select>
             <span id="rowCount" class="row-count"></span>
+            <button id="exportCsv" type="button">Выгрузить Excel</button>
           </div>
         </div>
         <div class="table-wrap">
@@ -258,7 +259,42 @@
     const repaint = () => paintDirectionRows(direction, search, select.value, prioritySelect.value);
     select.addEventListener("change", repaint);
     prioritySelect.addEventListener("change", repaint);
+    document.getElementById("exportCsv").addEventListener("click", () => {
+      const rows = filterDirectionRows(direction.rows, search, select.value, prioritySelect.value);
+      downloadDirectionCsv(direction, rows);
+    });
     repaint();
+  }
+
+  function csvValue(value) {
+    const text = String(value ?? "").replaceAll("\r\n", " ").replaceAll("\n", " ").replaceAll("\r", " ");
+    return /[;"\n\r]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+  }
+
+  function safeFileName(value) {
+    return String(value || "rating")
+      .replace(/[\\/:*?"<>|]+/g, "_")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 90) || "rating";
+  }
+
+  function downloadDirectionCsv(direction, rows) {
+    const header = ["#", ...direction.columns];
+    const lines = [
+      header.map(csvValue).join(";"),
+      ...rows.map((row, index) => [index + 1, ...direction.columns.map((column) => row[column])].map(csvValue).join(";")),
+    ];
+    const stamp = data.generatedAt.replace(/[^\d]+/g, "-").replace(/^-|-$/g, "");
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${safeFileName(direction.shortName)}_${stamp}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   function filterDirectionRows(rows, search, filter, priorityFilter = "all") {
