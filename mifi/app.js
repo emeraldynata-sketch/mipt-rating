@@ -222,12 +222,10 @@
               ${priorities.map((priority) => `<option value="${escapeHtml(priority)}">приоритет ${escapeHtml(priority)}</option>`).join("")}
             </select>
             <span id="rowCount" class="row-count"></span>
+            <button id="exportCsv" type="button">Выгрузить Excel</button>
           </div>
         </div>
         <div class="table-wrap">
-          <div class="table-actions">
-            <button id="exportCsv" type="button">Выгрузить Excel</button>
-          </div>
           <table class="direction-table">
             <thead>
               <tr><th>#</th>${direction.columns.map((col) => `<th>${headerLabel(col)}</th>`).join("")}</tr>
