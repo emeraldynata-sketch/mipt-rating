@@ -170,6 +170,9 @@
       </div>
     `;
 
+    document.querySelector(".summary-table thead tr th:nth-child(7)")
+      ?.insertAdjacentHTML("afterend", "<th>Осн. без высшего и согласий</th>");
+
     const checkbox = document.getElementById("onlyAnyaPriorities");
     checkbox.addEventListener("change", () => paintSummaryRows(rows, checkbox.checked));
     paintSummaryRows(rows, false);
@@ -186,6 +189,7 @@
         <td>${fmt(row.places)}</td>
         ${scoreCell(row.previousCutoff)}
         <td>${fmt(row.mainAbove)}</td>
+        <td>${fmt(row.mainWithoutHighNoConsent)}</td>
         ${scoreCell(row.mainCutoff)}
         <td>${fmt(row.highAbove)}</td>
         ${scoreCell(row.highCutoff)}
@@ -255,6 +259,9 @@
         </div>
       </div>
     `;
+
+    document.querySelector("#directionView .cards .metric:nth-child(2)")
+      ?.insertAdjacentHTML("afterend", metric("Осн. без высшего и согласий", direction.mainWithoutHighNoConsent, "выше Ани"));
 
     const select = document.getElementById("rowFilter");
     const prioritySelect = document.getElementById("priorityFilter");

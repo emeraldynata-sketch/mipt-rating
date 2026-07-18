@@ -174,6 +174,7 @@
                   <td><a class="route-link" href="#/direction/${encodeURIComponent(row.key)}">${escapeHtml(row.direction)}</a></td>
                   <td>${fmt(row.places)}</td>
                   <td>${fmt(row.mainAbove)}</td>
+                  <td>${fmt(row.mainWithoutHighNoConsent)}</td>
                   ${scoreCell(row.mainCutoff)}
                   <td>${fmt(row.highAbove)}</td>
                   ${scoreCell(row.highCutoff)}
@@ -187,6 +188,8 @@
         </div>
       </div>
     `;
+    document.querySelector(".summary-table thead tr th:nth-child(4)")
+      ?.insertAdjacentHTML("afterend", "<th>Осн. без высшего и согласий</th>");
   }
 
   function renderDirection(direction, search) {
@@ -234,6 +237,9 @@
         </div>
       </div>
     `;
+
+    document.querySelector("#directionView .cards .metric:nth-child(2)")
+      ?.insertAdjacentHTML("afterend", metric("Осн. без высшего и согласий", direction.mainWithoutHighNoConsent, "выше Ани"));
 
     const select = document.getElementById("rowFilter");
     const prioritySelect = document.getElementById("priorityFilter");
