@@ -196,6 +196,13 @@ p {
   line-height: 1.2;
 }
 
+.metric-detail {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .panel {
   background: var(--panel);
   border: 1px solid var(--line);

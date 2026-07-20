@@ -134,10 +134,10 @@
 
     summaryView.innerHTML = `
       <div class="cards">
-        ${metric("Направлений", data.directions.length, "полный общий конкурс МФТИ")}
-        ${metric("Строк в списках", data.totalRows, "обогащенные CSV")}
-        ${metric("Мин. основной без чужих", bestMain ? bestMain.mainCutoff : "", bestMain ? bestMain.direction : "")}
-        ${metric("Мин. высший проходной", bestConsent ? bestConsent.highCutoff : "", bestConsent ? bestConsent.direction : "")}
+        ${metric("Направления МФТИ", data.directions.length, "полный общий конкурс", "Сколько полных конкурсных списков МФТИ участвует в расчете.")}
+        ${metric("Строки в списках", data.totalRows, "после обогащения", "Общее число строк во всех загруженных направлениях.")}
+        ${metric("Лучшая отсечка: основной без чужих", bestMain ? bestMain.mainCutoff : "", bestMain ? bestMain.direction : "", "Минимальный проходной балл среди направлений по модели основного приоритета, исключая известных абитуриентов с согласием в другом вузе.")}
+        ${metric("Лучшая отсечка: высший проходной", bestConsent ? bestConsent.highCutoff : "", bestConsent ? bestConsent.direction : "", "Минимальный проходной балл среди направлений по модели приказа: учитываются только согласия и прохождение по приоритетам.")}
       </div>
       <div class="panel">
         <div class="panel-header">
@@ -199,12 +199,14 @@
     `).join("") || `<tr><td colspan="12" class="empty">Ничего не найдено</td></tr>`;
   }
 
-  function metric(label, value, note) {
+  function metric(label, value, note, detail) {
+    const help = detail || note || label;
     return `
-      <div class="metric">
+      <div class="metric" title="${escapeHtml(help)}">
         <div class="metric-label">${escapeHtml(label)}</div>
         <div class="metric-value">${escapeHtml(value)}</div>
         <div class="metric-note">${escapeHtml(note || "")}</div>
+        ${detail ? `<div class="metric-detail">${escapeHtml(detail)}</div>` : ""}
       </div>
     `;
   }
@@ -222,10 +224,10 @@
 
     directionView.innerHTML = `
       <div class="cards">
-        ${metric("Основной выше", direction.mainAbove, `проходной ${fmt(direction.mainCutoff)}`)}
-        ${metric("Без согласий в других", direction.mainWithoutOtherConsents, `проходной ${fmt(direction.mainWithoutOtherCutoff)}`)}
-        ${metric("Высший выше", direction.highAbove, `проходной ${fmt(direction.highCutoff)}`)}
-        ${metric("Аня", anya ? `№ ${fmt(anya["№"])}` : "не найдена", anya ? `балл ${fmt(anya["Сумма баллов с БВИ"])}` : "")}
+        ${metric("Основной приоритет выше Ани", direction.mainAbove, `отсечка ${fmt(direction.mainCutoff)}`, "Сколько мест перед Аней занимают абитуриенты, которым это направление достается по расчету основного приоритета внутри МФТИ.")}
+        ${metric("Основной без чужих согласий", direction.mainWithoutOtherConsents, `отсечка ${fmt(direction.mainWithoutOtherCutoff)}`, "То же, но исключены абитуриенты, у которых известно согласие в МИФИ или Бауманке.")}
+        ${metric("Высший проходной выше Ани", direction.highAbove, `отсечка ${fmt(direction.highCutoff)}`, "Сколько абитуриентов перед Аней проходят в модель текущего приказа: есть согласие и направление является высшим проходным.")}
+        ${metric("Аня в этом списке", anya ? `№ ${fmt(anya["№"])}` : "не найдена", anya ? `балл ${fmt(anya["Сумма баллов с БВИ"])}` : "", "Позиция и расчетный балл Ани в текущем конкурсном списке.")}
       </div>
       <div class="panel">
         <div class="panel-header">
@@ -259,7 +261,7 @@
     `;
 
     document.querySelector("#directionView .cards .metric:nth-child(2)")
-      ?.insertAdjacentHTML("afterend", metric("Осн. без высшего и согласий", direction.mainWithoutHighNoConsent, "выше Ани"));
+      ?.insertAdjacentHTML("afterend", metric("Осн. без высшего и без согласий", direction.mainWithoutHighNoConsent, "перед Аней", "Абитуриенты с основным приоритетом перед Аней, у которых пока нет высшего проходного и нет известного согласия ни в одном из наших вузов."));
 
     const select = document.getElementById("rowFilter");
     const prioritySelect = document.getElementById("priorityFilter");
