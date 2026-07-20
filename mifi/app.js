@@ -83,6 +83,10 @@
     return `<span class="badge ${cls}">${escapeHtml(value || "нет")}</span>`;
   }
 
+  function applicantCode(row) {
+    return String(row["ID участника"] || row["Код поступающего"] || "");
+  }
+
   function metric(label, value, note, detail) {
     const help = detail || note || label;
     return `
@@ -164,7 +168,7 @@
                 <th>Проходной осн. без чужих</th>
                 <th>Высший выше</th>
                 <th>Проходной высший</th>
-                <th>Аня №</th>
+                <th>Проходной<br>высш. +10%</th>
                 <th>Аня балл</th>
                 <th>Статус</th>
               </tr>
@@ -180,11 +184,11 @@
                   ${scoreCell(row.mainCutoff)}
                   <td>${fmt(row.highAbove)}</td>
                   ${scoreCell(row.highCutoff)}
-                  <td>${fmt(row.anyaRank)}</td>
+                  ${scoreCell(row.highCutoffPlus10)}
                   <td>${fmt(row.anyaScore)}</td>
                   <td>${escapeHtml(row.anyaStatus || "")}</td>
                 </tr>
-              `).join("") || `<tr><td colspan="10" class="empty">Ничего не найдено</td></tr>`}
+              `).join("") || `<tr><td colspan="11" class="empty">Ничего не найдено</td></tr>`}
             </tbody>
           </table>
         </div>
@@ -197,15 +201,21 @@
   function renderDirection(direction, search) {
     pageTitle.textContent = direction.shortName;
     pageSubtitle.textContent = `Приоритет ${fmt(direction.priority)} · мест ${fmt(direction.places)} · файл ${direction.fileName}`;
-    const anya = direction.rows.find((row) => String(row["ID участника"]) === applicantId);
+    const anya = direction.rows.find((row) => applicantCode(row) === applicantId);
     const priorities = priorityOptions(direction.rows);
 
     directionView.innerHTML = `
       <div class="cards">
-        ${metric("Основной приоритет выше Ани", direction.mainAbove, `отсечка ${fmt(direction.mainCutoff)}`, "Сколько мест перед Аней занимают абитуриенты, которым это направление достается по расчету основного приоритета в рамках загруженных списков МИФИ.")}
+        ${metric("Основной приоритет выше Ани и с таким же баллом", direction.mainAbove, `отсечка ${fmt(direction.mainCutoff)}`, "Сколько абитуриентов с баллом Ани и выше получают это направление по расчету основного приоритета в рамках загруженных списков МИФИ.")}
         ${metric("Основной без чужих согласий", direction.mainWithoutOtherConsents, `отсечка ${fmt(direction.mainWithoutOtherCutoff)}`, "То же, но исключены абитуриенты, у которых известно согласие в МФТИ или Бауманке.")}
-        ${metric("Высший проходной выше Ани", direction.highAbove, `отсечка ${fmt(direction.highCutoff)}`, "Сколько абитуриентов перед Аней проходят в модель текущего приказа: есть согласие и направление является высшим проходным.")}
+        ${metric("Высший проходной выше Ани и с таким же баллом", direction.highAbove, `отсечка ${fmt(direction.highCutoff)}`, "Сколько абитуриентов с баллом Ани и выше проходят в модель текущего приказа: есть согласие и направление является высшим проходным.")}
         ${metric("Аня в этом списке", anya ? `№ ${fmt(anya["Порядковый номер"])}` : "не найдена", anya ? `балл ${fmt(anya["Сумма баллов"])}` : "", "Позиция и расчетный балл Ани в текущем конкурсном списке.")}
+      </div>
+      <div class="cards scenario-cards">
+        ${metric("Сценарий мест +10%", direction.placesPlus10 || "", `было ${fmt(direction.places)}`, "Модельный сценарий: количество мест увеличено на 10% с округлением вверх.")}
+        ${metric("Осн. без чужих +10%", direction.mainWithoutOtherConsentsPlus10, `отсечка ${fmt(direction.mainWithoutOtherCutoffPlus10)}`, "Основной приоритет без известных чужих согласий при увеличенном числе мест.")}
+        ${metric("Осн. без высш. и согл. +10%", direction.mainWithoutHighNoConsentPlus10, "балл Ани и выше", "Абитуриенты с основным приоритетом, без высшего проходного и без известного согласия при увеличенном числе мест.")}
+        ${metric("Высший проходной +10%", direction.highAbovePlus10, `отсечка ${fmt(direction.highCutoffPlus10)}`, "Высший проходной при увеличенном числе мест.")}
       </div>
       <div class="panel">
         <div class="panel-header">
@@ -239,7 +249,7 @@
     `;
 
     document.querySelector("#directionView .cards .metric:nth-child(2)")
-      ?.insertAdjacentHTML("afterend", metric("Осн. без высшего и без согласий", direction.mainWithoutHighNoConsent, "перед Аней", "Абитуриенты с основным приоритетом перед Аней, у которых пока нет высшего проходного и нет известного согласия ни в одном из наших вузов."));
+      ?.insertAdjacentHTML("afterend", metric("Осн. без высшего и без согласий", direction.mainWithoutHighNoConsent, "балл Ани и выше", "Абитуриенты с основным приоритетом, без высшего проходного и без известного согласия, чей расчетный балл не ниже балла Ани."));
 
     const select = document.getElementById("rowFilter");
     const prioritySelect = document.getElementById("priorityFilter");
@@ -304,7 +314,7 @@
       counter.textContent = `Строк: ${rows.length} из ${direction.rows.length}`;
     }
     document.getElementById("directionRows").innerHTML = rows.map((row, index) => `
-      <tr class="${String(row["ID участника"]) === applicantId ? "anya-row" : ""}">
+      <tr class="${applicantCode(row) === applicantId ? "anya-row" : ""}">
         <td class="row-index">${index + 1}</td>
         ${direction.columns.map((col) => {
           const value = row[col];
