@@ -292,9 +292,64 @@ tbody tr:hover {
   background: #f5faf9;
 }
 
-.summary-table td:nth-child(2) {
+.summary-table {
+  table-layout: fixed;
+  font-size: 12px;
+}
+
+.summary-table th,
+.summary-table td {
+  padding: 7px 6px;
   white-space: normal;
-  min-width: 280px;
+  overflow-wrap: anywhere;
+  line-height: 1.18;
+}
+
+.summary-table th {
+  vertical-align: bottom;
+}
+
+.summary-table th:nth-child(1),
+.summary-table td:nth-child(1) {
+  width: 6%;
+}
+
+.summary-table th:nth-child(2),
+.summary-table td:nth-child(2) {
+  width: 18%;
+}
+
+.summary-table th:nth-child(3),
+.summary-table td:nth-child(3),
+.summary-table th:nth-child(4),
+.summary-table td:nth-child(4),
+.summary-table th:nth-child(11),
+.summary-table td:nth-child(11),
+.summary-table th:nth-child(12),
+.summary-table td:nth-child(12) {
+  width: 6%;
+}
+
+.summary-table th:nth-child(5),
+.summary-table td:nth-child(5),
+.summary-table th:nth-child(9),
+.summary-table td:nth-child(9),
+.summary-table th:nth-child(10),
+.summary-table td:nth-child(10) {
+  width: 7%;
+}
+
+.summary-table th:nth-child(6),
+.summary-table td:nth-child(6),
+.summary-table th:nth-child(7),
+.summary-table td:nth-child(7),
+.summary-table th:nth-child(8),
+.summary-table td:nth-child(8) {
+  width: 8%;
+}
+
+.summary-table td:not(:nth-child(2)) {
+  text-align: center;
 }
 
 .direction-table td:nth-child(2) {
