@@ -39,6 +39,14 @@
     return String(value || "").trim().toLowerCase() === "да";
   }
 
+  function scenarioFlag(row, scenarioColumn, baseColumn) {
+    const scenarioValue = row[scenarioColumn];
+    if (scenarioValue !== undefined && String(scenarioValue || "").trim() !== "") {
+      return scenarioValue;
+    }
+    return row[baseColumn];
+  }
+
   function num(value) {
     const parsed = Number(String(value || "").replace(",", "."));
     return Number.isFinite(parsed) ? parsed : null;
@@ -80,6 +88,7 @@
       .replaceAll(" без согласий ", "<br>без согласий ")
       .replaceAll(" высший ", "<br>высший ")
       .replaceAll(" основной ", "<br>основной ")
+      .replaceAll(" предварительный ", "<br>предварительный ")
       .replaceAll(" назначенный ", "<br>назначенный ");
   }
 
@@ -314,9 +323,9 @@
 
   function filterDirectionRows(rows, search, filter, priorityFilter = "all") {
     return rows.filter((row) => {
-      if (filter === "main" && !yes(row["МФТИ_full_расчет_основной_приоритет"])) return false;
-      if (filter === "mainNoOther" && !yes(row["МФТИ_full_основной_без_согласий_в_других_вузах"])) return false;
-      if (filter === "highest" && !yes(row["МФТИ_full_расчет_высший_проходной_приоритет"])) return false;
+      if (filter === "main" && !yes(scenarioFlag(row, "МФТИ_full_предварительный_основной_приоритет", "МФТИ_full_расчет_основной_приоритет"))) return false;
+      if (filter === "mainNoOther" && !yes(scenarioFlag(row, "МФТИ_full_предварительный_основной_без_согласий_в_других_вузах", "МФТИ_full_основной_без_согласий_в_других_вузах"))) return false;
+      if (filter === "highest" && !yes(scenarioFlag(row, "МФТИ_full_предварительный_высший_проходной_приоритет", "МФТИ_full_расчет_высший_проходной_приоритет"))) return false;
       if (filter === "consent" && !yes(row["Согласие_есть_в_наших_выгрузках"]) && !yes(row["Согласие МФТИ сайт"])) return false;
       if (filter === "bvi" && !yes(row["БВИ в этом конкурсе"])) return false;
       if (priorityFilter !== "all" && String(row["Приоритет"]) !== String(priorityFilter)) return false;
@@ -337,7 +346,7 @@
         <td class="row-index">${index + 1}</td>
         ${direction.columns.map((col) => {
           const value = row[col];
-          if (["МФТИ_full_расчет_основной_приоритет", "МФТИ_full_основной_без_согласий_в_других_вузах", "МФТИ_full_расчет_высший_проходной_приоритет", "Согласие_МФТИ_госуслуги", "Согласие_МИФИ_госуслуги", "Согласие_Баумана_госуслуги", "БВИ в этом конкурсе"].includes(col)) {
+          if (["МФТИ_full_расчет_основной_приоритет", "МФТИ_full_основной_без_согласий_в_других_вузах", "МФТИ_full_расчет_высший_проходной_приоритет", "МФТИ_full_предварительный_основной_приоритет", "МФТИ_full_предварительный_основной_без_согласий_в_других_вузах", "МФТИ_full_предварительный_высший_проходной_приоритет", "Согласие_МФТИ_госуслуги", "Согласие_МИФИ_госуслуги", "Согласие_Баумана_госуслуги", "БВИ в этом конкурсе"].includes(col)) {
             return `<td>${badge(value)}</td>`;
           }
           return `<td>${escapeHtml(value)}</td>`;
